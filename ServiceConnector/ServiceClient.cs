@@ -11,18 +11,19 @@ namespace ServiceConnector
 {
     public class ServiceClient
     {
-        private KareoApi.KareoServices kareoServices = new KareoServicesClient();
-        private RequestHeader requestHeader; 
+        private KareoApi.KareoServices _kareoServices = new KareoServicesClient();
+        private RequestHeader _requestHeader; 
+        private static string OUT_FOLDER_NAME = @"\Output";
 
         public ServiceClient(string customerKey, string apiUser, string apiPassword, string clientVersion)
         {
-            requestHeader = new RequestHeader() { CustomerKey = customerKey, User = apiUser, Password = apiPassword, ClientVersion = clientVersion };
+            _requestHeader = new RequestHeader() { CustomerKey = customerKey, User = apiUser, Password = apiPassword, ClientVersion = clientVersion };
         }
 
         #region Get & Export Kareo API Data
 
         #region Get & Export Providers
-        public void GetProvidersFromApi()
+        public string GetProvidersFromApi()
         {
             ProviderFilter providerFilter = new ProviderFilter() { };
             ProviderFieldsToReturn providerFieldsToReturn = new ProviderFieldsToReturn();
@@ -30,19 +31,19 @@ namespace ServiceConnector
 
             GetProvidersReq request = new GetProvidersReq()
             {
-                RequestHeader = requestHeader,
+                RequestHeader = _requestHeader,
                 Filter = providerFilter,
                 Fields = providerFieldsToReturn
             };
 
-            try
+            response = _kareoServices.GetProviders(request);
+            if (response.ErrorResponse.IsError)
             {
-                response = kareoServices.GetProviders(request);
+                return response.ErrorResponse.ErrorMessage;
             }
-            catch (Exception e)
+            if (response.Providers == null || response.Providers.Length == 0)
             {
-                var errormsg = e.Message;
-                throw;
+                return "No results.  Check Customer Key is valid in .config file.";
             }
 
             List<ProviderData> responseData = response.Providers.ToList();
@@ -51,6 +52,8 @@ namespace ServiceConnector
             var data = responseData.Where(p => p.Active == "True");
 
             ExportProviders(data);
+            
+            return string.Empty;
         }
 
         private void ExportProviders(IEnumerable<ProviderData> responseData)
@@ -100,15 +103,14 @@ namespace ServiceConnector
                 }
 
                 string fileName = @"\Providers.xls";
-                string outFolderName = @"\Output";
                 string currentDirectory = Environment.CurrentDirectory;
-                if (!Directory.Exists(currentDirectory + outFolderName))
+                if (!Directory.Exists(currentDirectory + OUT_FOLDER_NAME))
                 {
-                    Directory.CreateDirectory(currentDirectory + outFolderName);
+                    Directory.CreateDirectory(currentDirectory + OUT_FOLDER_NAME);
                 }
 
                 excelApp.DisplayAlerts = false;
-                excelApp.ActiveWorkbook.SaveAs(currentDirectory + outFolderName + fileName, Excel.XlFileFormat.xlWorkbookNormal);
+                excelApp.ActiveWorkbook.SaveAs(currentDirectory + OUT_FOLDER_NAME + fileName, Excel.XlFileFormat.xlWorkbookNormal);
 
                 excelWorkbook.Close();
                 excelApp.Quit();
@@ -123,7 +125,7 @@ namespace ServiceConnector
         #endregion
 
         #region Get & Export Patients
-        public void GetPatientsFromApi()
+        public string GetPatientsFromApi()
         {
             PatientFilter patientFilter = new PatientFilter() { };
             PatientFieldsToReturn patientFieldsToReturn = new PatientFieldsToReturn();
@@ -131,19 +133,19 @@ namespace ServiceConnector
 
             GetPatientsReq request = new GetPatientsReq()
             {
-                RequestHeader = requestHeader,
+                RequestHeader = _requestHeader,
                 Filter = patientFilter,
                 Fields = patientFieldsToReturn
             };
 
-            try
+            response = _kareoServices.GetPatients(request);
+            if (response.ErrorResponse.IsError)
             {
-                response = kareoServices.GetPatients(request);
+                return response.ErrorResponse.ErrorMessage;
             }
-            catch (Exception e)
+            if (response.Patients == null || response.Patients.Length == 0)
             {
-                var errormsg = e.Message;
-                throw;
+                return "No results.  Check Customer Key is valid in .config file.";
             }
 
             List<PatientData> responseData = response.Patients.ToList();
@@ -152,6 +154,8 @@ namespace ServiceConnector
             //var data = responseData.Where(p => p.Active == "True");
 
             ExportPatients(responseData);
+
+            return string.Empty;
         }
 
         private void ExportPatients(List<PatientData> responseData)
@@ -225,15 +229,14 @@ namespace ServiceConnector
 
 
                 string fileName = @"\Patients.xls";
-                string outFolderName = @"\Output";
                 string currentDirectory = Environment.CurrentDirectory;
-                if (!Directory.Exists(currentDirectory + outFolderName))
+                if (!Directory.Exists(currentDirectory + OUT_FOLDER_NAME))
                 {
-                    Directory.CreateDirectory(currentDirectory + outFolderName);
+                    Directory.CreateDirectory(currentDirectory + OUT_FOLDER_NAME);
                 }
 
                 excelApp.DisplayAlerts = false;
-                excelApp.ActiveWorkbook.SaveAs(currentDirectory + outFolderName + fileName, Excel.XlFileFormat.xlWorkbookNormal);
+                excelApp.ActiveWorkbook.SaveAs(currentDirectory + OUT_FOLDER_NAME + fileName, Excel.XlFileFormat.xlWorkbookNormal);
 
                 excelWorkbook.Close();
                 excelApp.Quit();
@@ -246,6 +249,112 @@ namespace ServiceConnector
             }
         }
         #endregion Get & Export Patients
+
+        #region Get & Export Transations
+        public string GetTransactionsFromApi(string fromDate, string toDate)
+        {
+            TransactionFilter transactionFilter = new TransactionFilter() { FromServiceDate = fromDate, ToServiceDate = toDate };
+            TransactionFieldsToReturn transactionFieldsToReturn = new TransactionFieldsToReturn();
+            GetTransactionsResp response = null;
+
+            GetTransactionsReq request = new GetTransactionsReq()
+            {
+                RequestHeader = _requestHeader,
+                Filter = transactionFilter,
+                Fields = transactionFieldsToReturn
+            };
+
+            response = _kareoServices.GetTransactions(request);
+            if (response.ErrorResponse.IsError)
+            {
+                return response.ErrorResponse.ErrorMessage;
+            }
+            if (response.Transactions == null || response.Transactions.Length == 0)
+            {
+                return "No results.  Check Customer Key is valid in .config file.";
+            }
+
+            List<TransactionData> responseData = response.Transactions.ToList();
+
+            // Only export active transactions
+            //var data = responseData.Where(p => p.Active == "True");
+
+            ExportTransactions(responseData);
+
+            return string.Empty;
+        }
+
+        private void ExportTransactions(List<TransactionData> responseData)
+        {
+            Excel.Application excelApp = new Excel.Application();
+            if (excelApp != null)
+            {
+                excelApp.Visible = true;
+
+                Excel.Workbook excelWorkbook = excelApp.Workbooks.Add();
+                Excel.Worksheet excelWorksheet = (Excel.Worksheet)excelWorkbook.Sheets.Add();
+                excelWorksheet.Name = "TransactionList";
+
+                // Establish column headings in cells A1 and B1.
+                excelWorksheet.Cells[1, "A"] = "ID";
+                excelWorksheet.Cells[1, "B"] = "PatientID";
+                excelWorksheet.Cells[1, "C"] = "PatientFullName";
+                excelWorksheet.Cells[1, "D"] = "TransactionDate";
+                excelWorksheet.Cells[1, "E"] = "PostingDate";
+                excelWorksheet.Cells[1, "F"] = "ServiceDate";
+                excelWorksheet.Cells[1, "G"] = "Type";
+                excelWorksheet.Cells[1, "H"] = "ProcedureCode";
+                excelWorksheet.Cells[1, "I"] = "Amount";
+                excelWorksheet.Cells[1, "J"] = "Description";
+                excelWorksheet.Cells[1, "K"] = "InsuranceOrder";
+                excelWorksheet.Cells[1, "L"] = "InsuranceID";
+                excelWorksheet.Cells[1, "M"] = "InsuranceCompanyName";
+                excelWorksheet.Cells[1, "N"] = "InsurancePlanName";
+                excelWorksheet.Cells[1, "O"] = "LastModifiedDate";
+
+                var row = 1;
+                foreach (var data in responseData)
+                {
+                    row++;
+                    excelWorksheet.Cells[row, "A"] = data.ID;
+                    excelWorksheet.Cells[row, "b"] = data.PatientID;
+                    excelWorksheet.Cells[row, "c"] = data.PatientFullName;
+                    excelWorksheet.Cells[row, "d"] = data.TransactionDate;
+                    excelWorksheet.Cells[row, "e"] = data.PostingDate;
+                    excelWorksheet.Cells[row, "f"] = data.ServiceDate;
+                    excelWorksheet.Cells[row, "g"] = data.Type;
+                    excelWorksheet.Cells[row, "h"] = data.ProcedureCode;
+                    excelWorksheet.Cells[row, "i"] = data.Amount;
+                    excelWorksheet.Cells[row, "j"] = data.Description;
+                    excelWorksheet.Cells[row, "k"] = data.InsuranceOrder;
+                    excelWorksheet.Cells[row, "l"] = data.InsuranceID;
+                    excelWorksheet.Cells[row, "m"] = data.InsuranceCompanyName;
+                    excelWorksheet.Cells[row, "n"] = data.InsurancePlanName;
+                    excelWorksheet.Cells[row, "o"] = data.LastModifiedDate;
+                }
+
+                // TODO: Put in new sub folder with ending date.
+                string fileName = @"\Transactions.xls";
+                string currentDirectory = Environment.CurrentDirectory;
+                if (!Directory.Exists(currentDirectory + OUT_FOLDER_NAME))
+                {
+                    Directory.CreateDirectory(currentDirectory + OUT_FOLDER_NAME);
+                }
+
+                excelApp.DisplayAlerts = false;
+                excelApp.ActiveWorkbook.SaveAs(currentDirectory + OUT_FOLDER_NAME + fileName, Excel.XlFileFormat.xlWorkbookNormal);
+
+                excelWorkbook.Close();
+                excelApp.Quit();
+
+                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(excelWorksheet);
+                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(excelWorkbook);
+                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(excelApp);
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+        #endregion Get & Export Transactions
 
         #endregion Get & Export Kareo API Data
     }

@@ -11,26 +11,67 @@ namespace PraticeManagementExporter
     {
         static void Main(string[] args)
         {
-            var configHelper = new ConfigHelper();
-            var apiCreds = configHelper.GetApiCreds();
-            var settings = configHelper.GetEnabledSettings();
-
-            var client = new ServiceConnector.ServiceClient(apiCreds.customerKeyConfig, apiCreds.apiUserConfig, apiCreds.apiPasswordConfig, apiCreds.clientVersionConfig);
-
-            if (settings.AreProvidersEnabled)
+            try
             {
-                Console.WriteLine("Calling Api for providers and exporting data to excel...");
-                client.GetProvidersFromApi();
-                Console.WriteLine("Providers export completed successful.");
-            }
+                // Extract Settings from App.Config:
+                var configHelper = new ConfigHelper();
+                var apiCreds = configHelper.GetApiCreds();
+                var settings = configHelper.GetEnabledSettings();
 
-            if (settings.ArePatientsEnabled)
+                // Instantiate Kareo API ServiceClient:
+                var client = new ServiceConnector.ServiceClient(apiCreds.customerKeyConfig, apiCreds.apiUserConfig, apiCreds.apiPasswordConfig, apiCreds.clientVersionConfig);
+
+                // Call Api for Providers and Extract to Excel:
+                if (settings.AreProvidersEnabled)
+                {
+                    Console.WriteLine("\nCalling Api for providers and exporting data to excel...");
+                    string response = client.GetProvidersFromApi();
+                    if (!string.IsNullOrWhiteSpace(response))
+                    {
+                        Console.WriteLine($"\nApi Message: {response}\n");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Providers export completed successful.\n");
+                    }
+                }
+
+                // Call Api for Patients and Extract to Excel:
+                if (settings.ArePatientsEnabled)
+                {
+                    Console.WriteLine("\nCalling Api for patients and exporting data to excel...");
+                    string response = client.GetPatientsFromApi();
+                    if (!string.IsNullOrWhiteSpace(response))
+                    {
+                        Console.WriteLine($"\nApi Message: {response}\n");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Patients export completed successful.\n");
+                    }
+                }
+
+                // Call Api for Transactions and Extract to Excel:
+                if (settings.AreTransactionsEnabled)
+                {
+                    Console.WriteLine("\nCalling Api for transactions and exporting data to excel...");
+                    string response = client.GetTransactionsFromApi(configHelper.GetTransactionsFromServiceDate, configHelper.GetTransactionsToServiceDate);
+                    if (!string.IsNullOrWhiteSpace(response))
+                    {
+                        Console.WriteLine($"\nApi Message: {response}\n");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Transactions export completed successful.\n");
+                    }
+                }
+            }
+            catch (Exception err)
             {
-                Console.WriteLine("Calling Api for patients and exporting data to excel...");
-                client.GetPatientsFromApi();
-                Console.WriteLine("Patients export completed successful.");
+                Console.WriteLine("\n\nIssues with processing occurred... process stopped.");
+                Console.WriteLine($"\n\n Error Message:\n {err.Message} \n\n Stack Trace:\n {err.StackTrace}");
+                Console.Read();
             }
-
             Console.WriteLine("Done");
             Console.Read();
         }
