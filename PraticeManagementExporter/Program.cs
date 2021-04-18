@@ -51,6 +51,27 @@ namespace PraticeManagementExporter
                     }
                 }
 
+                // Call Api for Appointments and Extract to Excel:
+                if (settings.AreAppointmentsEnabled)
+                {
+                    Console.WriteLine("\nAppointments have not been coded yet...");
+
+                }
+
+                // Call Api for Charges and Extract to Excel:
+                if (settings.AreChargesEnabled)
+                {
+                    Console.WriteLine("\nAppointments have not been coded yet...");
+
+                }
+
+                // Call Api for Payments and Extract to Excel:
+                if (settings.ArePaymentsEnabled)
+                {
+                    Console.WriteLine("\nAppointments have not been coded yet...");
+
+                }
+
                 // Call Api for Transactions and Extract to Excel:
                 if (settings.AreTransactionsEnabled)
                 {
@@ -64,6 +85,15 @@ namespace PraticeManagementExporter
                     {
                         Console.WriteLine("Transactions export completed successful.\n");
                     }
+                }
+
+                // Call Api for Encounters and Extract to Excel:
+                // NOTE: This ties all the APIs together with EncounterID, and contains: PatientID, AppointmentID, RenderingProviderID.
+                //       Then charges, payments, & transactions are related to the encounter's "BatchNumber"
+                if (settings.AreEncountersEnabled)
+                {
+                    Console.WriteLine("\nEncounters have not been coded yet...");
+
                 }
             }
             catch (Exception err)

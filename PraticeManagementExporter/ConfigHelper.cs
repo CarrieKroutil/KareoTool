@@ -58,7 +58,11 @@ namespace PraticeManagementExporter
     {
         public bool AreProvidersEnabled { get; private set; }
         public bool ArePatientsEnabled { get; private set; }
+        public bool AreAppointmentsEnabled { get; private set; }
+        public bool AreChargesEnabled { get; private set; }
+        public bool ArePaymentsEnabled { get; private set; }
         public bool AreTransactionsEnabled { get; private set; }
+        public bool AreEncountersEnabled { get; private set; }
 
         /// <summary>
         /// Settings for which data endpoints to export.
@@ -71,8 +75,20 @@ namespace PraticeManagementExporter
             // Patients
             ArePatientsEnabled = GetEnabledSettingValue("EnablePatients");
 
+            // Appointments
+            AreTransactionsEnabled = GetEnabledSettingValue("EnableAppointments");
+
+            // Charges
+            AreTransactionsEnabled = GetEnabledSettingValue("EnableCharges");
+
+            // Payments
+            AreTransactionsEnabled = GetEnabledSettingValue("EnablePayments");
+
             // Transations
             AreTransactionsEnabled = GetEnabledSettingValue("EnableTransactions");
+
+            // Encounters
+            AreEncountersEnabled = GetEnabledSettingValue("EnableEncounters");
         }
 
         private bool GetEnabledSettingValue(string configName)

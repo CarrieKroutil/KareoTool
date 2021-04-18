@@ -11,9 +11,14 @@ namespace ServiceConnector
 {
     public class ServiceClient
     {
-        private KareoApi.KareoServices _kareoServices = new KareoServicesClient();
-        private RequestHeader _requestHeader; 
         private static string OUT_FOLDER_NAME = @"\Output";
+        private static string APPOINTMENT_FOLDER_NAME = @"\Appointments";
+        private static string CHARGES_FOLDER_NAME = @"\Charges";
+        private static string PAYMENTS_FOLDER_NAME = @"\Payments";
+        private static string TRANSACTIONS_FOLDER_NAME = @"\Transactions";
+
+        private KareoApi.KareoServices _kareoServices = new KareoServicesClient();
+        private RequestHeader _requestHeader;
 
         public ServiceClient(string customerKey, string apiUser, string apiPassword, string clientVersion)
         {
@@ -279,12 +284,13 @@ namespace ServiceConnector
             // Only export active transactions
             //var data = responseData.Where(p => p.Active == "True");
 
-            ExportTransactions(responseData);
+            string fileName = @"\Transactions_" + fromDate + "_" + toDate + ".xls";
+            ExportTransactions(responseData, fileName);
 
             return string.Empty;
         }
 
-        private void ExportTransactions(List<TransactionData> responseData)
+        private void ExportTransactions(List<TransactionData> responseData, string exportToFileName)
         {
             Excel.Application excelApp = new Excel.Application();
             if (excelApp != null)
@@ -333,16 +339,18 @@ namespace ServiceConnector
                     excelWorksheet.Cells[row, "o"] = data.LastModifiedDate;
                 }
 
-                // TODO: Put in new sub folder with ending date.
-                string fileName = @"\Transactions.xls";
                 string currentDirectory = Environment.CurrentDirectory;
                 if (!Directory.Exists(currentDirectory + OUT_FOLDER_NAME))
                 {
                     Directory.CreateDirectory(currentDirectory + OUT_FOLDER_NAME);
                 }
+                if (!Directory.Exists(currentDirectory + OUT_FOLDER_NAME + TRANSACTIONS_FOLDER_NAME))
+                {
+                    Directory.CreateDirectory(currentDirectory + OUT_FOLDER_NAME + TRANSACTIONS_FOLDER_NAME);
+                }
 
                 excelApp.DisplayAlerts = false;
-                excelApp.ActiveWorkbook.SaveAs(currentDirectory + OUT_FOLDER_NAME + fileName, Excel.XlFileFormat.xlWorkbookNormal);
+                excelApp.ActiveWorkbook.SaveAs(currentDirectory + OUT_FOLDER_NAME + TRANSACTIONS_FOLDER_NAME + exportToFileName, Excel.XlFileFormat.xlWorkbookNormal);
 
                 excelWorkbook.Close();
                 excelApp.Quit();
