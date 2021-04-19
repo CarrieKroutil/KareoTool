@@ -88,8 +88,10 @@ namespace PraticeManagementExporter
                 }
 
                 // Call Api for Encounters and Extract to Excel:
-                // NOTE: This ties all the APIs together with EncounterID, and contains: PatientID, AppointmentID, RenderingProviderID.
-                //       Then charges, payments, & transactions are related to the encounter's "BatchNumber"
+                /* NOTE: This ties all the APIs together with EncounterID, and contains: PatientID, AppointmentID, RenderingProviderID.
+                    Then charges & payments are related to the encounter's "BatchNumber".
+                    Transactions do not have any key to tie back to encounters, other than the PatientID and service date.     
+                 */ 
                 if (settings.AreEncountersEnabled)
                 {
                     Console.WriteLine("\nEncounters have not been coded yet...");
@@ -102,6 +104,8 @@ namespace PraticeManagementExporter
                 Console.WriteLine($"\n\n Error Message:\n {err.Message} \n\n Stack Trace:\n {err.StackTrace}");
                 Console.Read();
             }
+
+            // TODO: Add logger implemenation to write every time cw is written to help track reported issues.
             Console.WriteLine("Done");
             Console.Read();
         }

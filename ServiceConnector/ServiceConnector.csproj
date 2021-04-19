@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExcelExporter.cs" />
+    <Compile Include="ExportHelper.cs" />
     <Compile Include="ServiceClient.cs" />
     <Compile Include="Connected Services\KareoApi\Reference.cs">
       <AutoGen>True</AutoGen>
